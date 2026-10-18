@@ -13,27 +13,47 @@
     \hline
     \textbf{Imagen} & \textbf{Método} & \textbf{Entropy} & \textbf{SNR (dB)} & \textbf{PSNR (dB)} & \textbf{RMSE} & \textbf{Mean} & \textbf{SSIM} \\
     \hline
-    test_image_01 & Nearest neighbor interpolation & 6.5465 & 28.7622 & 32.4402 & 0.0239 & 0.6317 & 0.9905 \\
-    test_image_01 & Bilinear interpolation & 6.5257 & 30.7406 & 34.4186 & 0.0190 & 0.6322 & 0.9939 \\
-    test_image_01 & Proposed method (SVD+CS) & 6.5556 & 28.0596 & 31.7376 & 0.0259 & 0.6316 & 0.9888 \\
+    lena & Nearest neighbor interpolation & 7.7328 & 25.8273 & 30.9648 & 0.0283 & 0.5029 & 0.9925 \\
+    lena & Bilinear interpolation & 7.7143 & 26.7411 & 31.8787 & 0.0255 & 0.5038 & 0.9939 \\
+    lena & Proposed method (SVD+CS) & 7.7333 & 24.7725 & 29.9100 & 0.0320 & 0.5029 & 0.9905 \\
+    \hline
+    peppers & Nearest neighbor interpolation & 7.7031 & 22.9474 & 28.2358 & 0.0360 & 0.4341 & 0.9904 \\
+    peppers & Bilinear interpolation & 7.7207 & 23.9072 & 29.1956 & 0.0322 & 0.4350 & 0.9922 \\
+    peppers & Proposed method (SVD+CS) & 7.7086 & 22.8548 & 28.1432 & 0.0364 & 0.4345 & 0.9901 \\
     \hline
   \end{tabular}
   }
 \end{table}
 
 % --- OPCIÓN 2: Tablas Individuales por Imagen (Estilo Table I & II del Paper Original) ---
-% Tabla para test_image_01
+% Tabla para lena
 \begin{table}[htbp]
   \centering
-  \caption{Performance comparison of existing and proposed schemes for test_image_01}
-  \label{tab:test_image_01}
+  \caption{Performance comparison of existing and proposed schemes for lena}
+  \label{tab:lena}
   \begin{tabular}{|l|c|c|c|c|c|c|}
     \hline
     \textbf{Methods} & \textbf{Entropy} & \textbf{SNR} & \textbf{PSNR} & \textbf{RMSE} & \textbf{Mean} & \textbf{SSIM} \\
     \hline
-    Nearest neighbor interpolation & 6.5465 & 28.7622 & 32.4402 & 0.0239 & 0.6317 & 0.9905 \\
-    Bilinear interpolation & 6.5257 & 30.7406 & 34.4186 & 0.0190 & 0.6322 & 0.9939 \\
-    Proposed method (SVD+CS) & 6.5556 & 28.0596 & 31.7376 & 0.0259 & 0.6316 & 0.9888 \\
+    Nearest neighbor interpolation & 7.7328 & 25.8273 & 30.9648 & 0.0283 & 0.5029 & 0.9925 \\
+    Bilinear interpolation & 7.7143 & 26.7411 & 31.8787 & 0.0255 & 0.5038 & 0.9939 \\
+    Proposed method (SVD+CS) & 7.7333 & 24.7725 & 29.9100 & 0.0320 & 0.5029 & 0.9905 \\
+    \hline
+  \end{tabular}
+\end{table}
+
+% Tabla para peppers
+\begin{table}[htbp]
+  \centering
+  \caption{Performance comparison of existing and proposed schemes for peppers}
+  \label{tab:peppers}
+  \begin{tabular}{|l|c|c|c|c|c|c|}
+    \hline
+    \textbf{Methods} & \textbf{Entropy} & \textbf{SNR} & \textbf{PSNR} & \textbf{RMSE} & \textbf{Mean} & \textbf{SSIM} \\
+    \hline
+    Nearest neighbor interpolation & 7.7031 & 22.9474 & 28.2358 & 0.0360 & 0.4341 & 0.9904 \\
+    Bilinear interpolation & 7.7207 & 23.9072 & 29.1956 & 0.0322 & 0.4350 & 0.9922 \\
+    Proposed method (SVD+CS) & 7.7086 & 22.8548 & 28.1432 & 0.0364 & 0.4345 & 0.9901 \\
     \hline
   \end{tabular}
 \end{table}

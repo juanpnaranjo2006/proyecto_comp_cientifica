@@ -1,4 +1,7 @@
 Imagen,Metodo,Entropy,SNR,PSNR,RMSE,Mean,SSIM
-test_image_01,Nearest neighbor interpolation,6.5465,28.7622,32.4402,0.0239,0.6317,0.9905
-test_image_01,Bilinear interpolation,6.5257,30.7406,34.4186,0.019,0.6322,0.9939
-test_image_01,Proposed method (SVD+CS),6.5556,28.0596,31.7376,0.0259,0.6316,0.9888
+lena,Nearest neighbor interpolation,7.7328,25.8273,30.9648,0.0283,0.5029,0.9925
+lena,Bilinear interpolation,7.7143,26.7411,31.8787,0.0255,0.5038,0.9939
+lena,Proposed method (SVD+CS),7.7333,24.7725,29.91,0.032,0.5029,0.9905
+peppers,Nearest neighbor interpolation,7.7031,22.9474,28.2358,0.036,0.4341,0.9904
+peppers,Bilinear interpolation,7.7207,23.9072,29.1956,0.0322,0.435,0.9922
+peppers,Proposed method (SVD+CS),7.7086,22.8548,28.1432,0.0364,0.4345,0.9901

@@ -9,9 +9,12 @@ venv/
 ENV/
 env/
 
-# Salidas de procesamiento generadas automáticamente (manteniendo la carpeta)
+# Salidas de procesamiento generadas (preservando únicamente los resultados oficiales)
 output_images/*
-!output_images/.gitkeep
+!output_images/lena_ampliada.png
+!output_images/peppers_ampliada.tiff
+!output_images/metricas_rendimiento.csv
+!output_images/tabla_latex.txt
 
 # IDEs y editores de código
 .vscode/
