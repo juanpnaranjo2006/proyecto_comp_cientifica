@@ -1,12 +1,13 @@
 """
 Módulo de procesamiento matricial para el esquema SVD + Interpolación.
 Implementa la factorización SVD, generación de vectores de incremento aleatorio,
-expansión de matrices de características ortogonales (ecuaciones 11-13 del paper)
-y reconstrucción del canal en alta resolución (ecuaciones 14-16).
+expansión de matrices de características ortogonales mediante Splines Cúbicos
+asistidos por números aleatorios y reconstrucción del canal en alta resolución.
 """
 
 from typing import Tuple, Union, Optional
 import numpy as np
+from scipy.interpolate import CubicSpline
 
 
 def SVD(matriz: np.ndarray, retornar_sigma_diagonal: bool = True) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -54,7 +55,7 @@ def generate_random_incremental_vector(n: int, seed: Optional[int] = None) -> np
     Parámetros:
     -----------
     n : int
-        Dimensión del vector (número de columnas de la matriz de características).
+        Dimensión del vector (número de filas/columnas de la matriz de características).
     seed : int, opcional
         Semilla para el generador de números aleatorios (útil para reproducibilidad experimental).
 
@@ -70,20 +71,32 @@ def generate_random_incremental_vector(n: int, seed: Optional[int] = None) -> np
     return rng.uniform(0.0, 1.0, size=n)
 
 
-def expand_matrix(matriz: np.ndarray, vector_random: np.ndarray) -> np.ndarray:
+def expand_matrix(
+    matriz: np.ndarray,
+    vector_random: np.ndarray,
+    metodo: str = "spline"
+) -> np.ndarray:
     """
-    Expande una matriz de características ortogonales (U o V) al doble de filas (2n x n)
-    intercalando entre cada fila original una fila incrementada con el vector aleatorio,
-    según la metodología descrita en las ecuaciones (11), (12) y (13) del artículo:
-        Fila 2i   (impar en base 1) : U[i, :]
-        Fila 2i+1 (par en base 1)   : U[i, :] + vector_random
+    Expande una matriz de características ortogonales (U o V) al doble de filas (2n x n).
+    
+    Por defecto ('spline'), interpola cada columna de la matriz utilizando Splines Cúbicos
+    evaluados en las posiciones intermedias definidas por el vector de incrementos aleatorios,
+    cumpliendo con la premisa del paper: "Only one increment point has been used in the middle
+    of any two continuous points to enlarge the image into double size".
+
+    Las filas pares (0, 2, 4, ... en Python / impares en el paper) preservan exactamente
+    las características de la matriz original, y las filas impares (1, 3, 5, ...) contienen
+    los valores interpolados mediante Spline Cúbico.
 
     Parámetros:
     -----------
     matriz : np.ndarray
         Matriz bidimensional de características (n, m), típicamente (n, n).
     vector_random : np.ndarray
-        Vector 1D de incrementos aleatorios de tamaño (m,).
+        Vector 1D de incrementos aleatorios en [0, 1).
+    metodo : str, opcional ('spline' o 'literal')
+        - 'spline': Interpolación por Splines Cúbicos con paso aleatorio (Recomendado).
+        - 'literal': Adición directa U + h de la Ec. 11 (genera artefactos por overflow de energía).
 
     Retorna:
     --------
@@ -96,20 +109,39 @@ def expand_matrix(matriz: np.ndarray, vector_random: np.ndarray) -> np.ndarray:
     n_filas, n_columnas = matriz.shape
     vector = np.asarray(vector_random).squeeze()
 
-    if vector.ndim != 1 or vector.shape[0] != n_columnas:
-        raise ValueError(
-            f"El vector aleatorio debe tener longitud igual al número de columnas de la matriz ({n_columnas}), "
-            f"pero tiene forma {vector.shape}"
-        )
+    if vector.ndim != 1 or vector.shape[0] != n_filas:
+        # En matrices cuadradas n_filas == n_columnas, pero verificamos dimensión n
+        if vector.shape[0] != n_columnas:
+            raise ValueError(
+                f"El vector aleatorio debe tener tamaño compatible con la matriz ({n_filas}), "
+                f"pero tiene forma {vector.shape}"
+            )
 
-    # Creamos la matriz resultado de tamaño (2n, m)
-    matriz_expandida = np.empty((2 * n_filas, n_columnas), dtype=matriz.dtype)
+    if metodo.lower() == "literal":
+        # Implementación literal Ec. 11 (produce artefactos numéricos por escala de U)
+        matriz_expandida = np.empty((2 * n_filas, n_columnas), dtype=matriz.dtype)
+        matriz_expandida[0::2, :] = matriz
+        matriz_expandida[1::2, :] = matriz + vector
+        return matriz_expandida
 
-    # Filas pares (0, 2, 4, ... en Python / impares en el paper): características originales
-    matriz_expandida[0::2, :] = matriz
+    # Método 'spline': Interpolación por Splines Cúbicos asistida por números aleatorios
+    x_nodos = np.arange(n_filas, dtype=np.float64)
 
-    # Filas impares (1, 3, 5, ... en Python / pares en el paper): características incrementadas
-    matriz_expandida[1::2, :] = matriz + vector
+    # El paso incremental entre x_i y x_{i+1} se ubica en el intervalo (0.1, 0.9)
+    # según el vector aleatorio, situándolo en la región intermedia entre ambos nodos
+    r_paso = 0.2 + 0.6 * np.clip(vector, 0.0, 1.0)
+
+    x_eval = np.empty(2 * n_filas, dtype=np.float64)
+    # Filas pares: nodos originales exactos (conserva características originales)
+    x_eval[0::2] = x_nodos
+    # Filas impares: puntos intermedios interpolados
+    x_eval[1:-1:2] = x_nodos[:-1] + r_paso[:-1]
+    # Último punto: extrapolación suave dentro del último tramo
+    x_eval[-1] = x_nodos[-1] + 0.5 * r_paso[-1]
+
+    # Ajustar Spline Cúbico por columnas (axis=0)
+    cs = CubicSpline(x_nodos, matriz, axis=0, bc_type="natural")
+    matriz_expandida = cs(x_eval)
 
     return matriz_expandida
 
@@ -117,10 +149,11 @@ def expand_matrix(matriz: np.ndarray, vector_random: np.ndarray) -> np.ndarray:
 def expand_feature_pair(
     matriz_u: np.ndarray,
     matriz_vt: np.ndarray,
-    vector_random: np.ndarray
+    vector_random: np.ndarray,
+    metodo: str = "spline"
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
-    Función de conveniencia que expande simultáneamente U y V:
+    Función que expande simultáneamente U y V:
     1. Expande U directamente a U_new (2n x n).
     2. Obtiene V = (Vt)^T, lo expande a V_new (2n x n) y retorna su transpuesta (V_new)^T (n x 2n).
 
@@ -131,7 +164,8 @@ def expand_feature_pair(
     matriz_vt : np.ndarray
         Matriz ortogonal Vt = V^T (n, n).
     vector_random : np.ndarray
-        Vector de incrementos aleatorios (n,).
+        Vector de incrementos aleatorios.
+    metodo : str, opcional ('spline' o 'literal')
 
     Retorna:
     --------
@@ -140,11 +174,11 @@ def expand_feature_pair(
     vt_new : np.ndarray (n, 2n)
         Matriz (V_new)^T expandida y transpuesta, lista para la reconstrucción.
     """
-    u_new = expand_matrix(matriz_u, vector_random)
+    u_new = expand_matrix(matriz_u, vector_random, metodo=metodo)
 
     # V es la transpuesta de Vt
     v = matriz_vt.T
-    v_new = expand_matrix(v, vector_random)
+    v_new = expand_matrix(v, vector_random, metodo=metodo)
     vt_new = v_new.T
 
     return u_new, vt_new
@@ -154,7 +188,7 @@ def reconstruct(
     matriz_sigma: np.ndarray,
     matriz_u: np.ndarray,
     matriz_v_transpuesta: np.ndarray,
-    recortar_rango: bool = False
+    recortar_rango: bool = True
 ) -> np.ndarray:
     """
     Reconstruye un canal de color en alta resolución (2n x 2n) multiplicando las matrices
@@ -170,7 +204,7 @@ def reconstruct(
     matriz_v_transpuesta : np.ndarray
         Matriz de características derechas expandida y transpuesta (n, 2n).
         Si se pasa sin transponer (2n, n), la función detecta las dimensiones y la transpone automáticamente.
-    recortar_rango : bool, opcional (por defecto False)
+    recortar_rango : bool, opcional (por defecto True)
         Si es True, recorta los valores resultantes al intervalo [0.0, 1.0].
 
     Retorna:

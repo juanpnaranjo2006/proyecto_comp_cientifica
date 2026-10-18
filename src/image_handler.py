@@ -10,7 +10,43 @@ import numpy as np
 from PIL import Image
 
 
-def leer_imagen(ruta: Union[str, Path], normalizar: bool = True) -> np.ndarray:
+def recortar_a_cuadrada(imagen: np.ndarray) -> np.ndarray:
+    """
+    Recorta una imagen a una matriz cuadrada (n, n, 3) tomando la dimensión más pequeña (min(H, W)).
+    Si la imagen ya es cuadrada, la retorna sin modificaciones.
+    Si no es cuadrada, realiza un recorte centrado y reporta en consola las nuevas dimensiones.
+
+    Parámetros:
+    -----------
+    imagen : np.ndarray
+        Arreglo tridimensional (H, W, 3).
+
+    Retorna:
+    --------
+    np.ndarray:
+        Arreglo tridimensional cuadrado (n, n, 3) donde n = min(H, W).
+    """
+    if imagen.ndim != 3:
+        raise ValueError(f"Se esperaba una imagen tridimensional (H, W, 3), se recibió {imagen.shape}")
+
+    h, w, _ = imagen.shape
+    if h == w:
+        return imagen
+
+    n = min(h, w)
+    inicio_y = (h - n) // 2
+    inicio_x = (w - n) // 2
+    recortada = imagen[inicio_y : inicio_y + n, inicio_x : inicio_x + n, :]
+
+    print(f"[*] Aviso: Imagen no cuadrada ({w}x{h}). Se recortó centradamente a la dimensión mínima: {n}x{n}")
+    return recortada
+
+
+def leer_imagen(
+    ruta: Union[str, Path],
+    normalizar: bool = True,
+    hacer_cuadrada: bool = True
+) -> np.ndarray:
     """
     Carga una imagen desde el disco y la retorna como un arreglo de NumPy en formato RGB.
 
@@ -22,11 +58,14 @@ def leer_imagen(ruta: Union[str, Path], normalizar: bool = True) -> np.ndarray:
         Si es True, convierte los valores de píxeles de [0, 255] a punto flotante en [0.0, 1.0],
         adecuado para operaciones numéricas y factorizaciones SVD como en el artículo.
         Si es False, retorna uint8 en el rango [0, 255].
+    hacer_cuadrada : bool, opcional (por defecto True)
+        Si es True y la imagen no es cuadrada (H != W), recorta la imagen a min(H, W) x min(H, W)
+        y reporta las nuevas dimensiones por consola.
 
     Retorna:
     --------
     np.ndarray:
-        Arreglo tridimensional (H, W, 3) con los valores RGB.
+        Arreglo tridimensional (H, W, 3) o (n, n, 3) con los valores RGB.
     """
     path = Path(ruta)
     if not path.is_file():
@@ -37,8 +76,14 @@ def leer_imagen(ruta: Union[str, Path], normalizar: bool = True) -> np.ndarray:
         arr = np.array(img_rgb)
 
     if normalizar:
-        return arr.astype(np.float64) / 255.0
-    return arr
+        arr_proc = arr.astype(np.float64) / 255.0
+    else:
+        arr_proc = arr
+
+    if hacer_cuadrada:
+        arr_proc = recortar_a_cuadrada(arr_proc)
+
+    return arr_proc
 
 
 def separar_canales(imagen: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
