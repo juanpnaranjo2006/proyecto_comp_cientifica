@@ -1,0 +1,39 @@
+% ======================================================================
+% TABLAS LATEX DE MÉTRICAS DE RENDIMIENTO (COMPUTACIÓN CIENTÍFICA)
+% Generadas automáticamente por tester.py a partir de las Ecs. (17)-(22)
+% ======================================================================
+
+% --- OPCIÓN 1: Tabla Global Comparativa con todas las imágenes ---
+\begin{table}[htbp]
+  \centering
+  \caption{Comparación de rendimiento de esquemas existentes y propuesto (Ecuaciones 17--22)}
+  \label{tab:comparacion_global}
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{|l|l|c|c|c|c|c|c|}
+    \hline
+    \textbf{Imagen} & \textbf{Método} & \textbf{Entropy} & \textbf{SNR (dB)} & \textbf{PSNR (dB)} & \textbf{RMSE} & \textbf{Mean} & \textbf{SSIM} \\
+    \hline
+    test_image_01 & Nearest neighbor interpolation & 6.5465 & 28.7622 & 32.4402 & 0.0239 & 0.6317 & 0.9905 \\
+    test_image_01 & Bilinear interpolation & 6.5257 & 30.7406 & 34.4186 & 0.0190 & 0.6322 & 0.9939 \\
+    test_image_01 & Proposed method (SVD+CS) & 6.5556 & 28.0596 & 31.7376 & 0.0259 & 0.6316 & 0.9888 \\
+    \hline
+  \end{tabular}
+  }
+\end{table}
+
+% --- OPCIÓN 2: Tablas Individuales por Imagen (Estilo Table I & II del Paper Original) ---
+% Tabla para test_image_01
+\begin{table}[htbp]
+  \centering
+  \caption{Performance comparison of existing and proposed schemes for test_image_01}
+  \label{tab:test_image_01}
+  \begin{tabular}{|l|c|c|c|c|c|c|}
+    \hline
+    \textbf{Methods} & \textbf{Entropy} & \textbf{SNR} & \textbf{PSNR} & \textbf{RMSE} & \textbf{Mean} & \textbf{SSIM} \\
+    \hline
+    Nearest neighbor interpolation & 6.5465 & 28.7622 & 32.4402 & 0.0239 & 0.6317 & 0.9905 \\
+    Bilinear interpolation & 6.5257 & 30.7406 & 34.4186 & 0.0190 & 0.6322 & 0.9939 \\
+    Proposed method (SVD+CS) & 6.5556 & 28.0596 & 31.7376 & 0.0259 & 0.6316 & 0.9888 \\
+    \hline
+  \end{tabular}
+\end{table}
